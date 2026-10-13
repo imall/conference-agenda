@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>研討會議程</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1b1f24; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb; --err:#b91c1c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1115; --card:#1a1d23; --text:#e8eaed; --muted:#9aa0a6; --line:#2a2e35; --accent:#60a5fa; --err:#f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui, "Noto Sans TC", sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:16px; }
+  header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  header h1 { font-size:20px; margin:0; flex:1; overflow-wrap:anywhere; }
+  button, input, select { font:inherit; }
+  #conf-select { flex:1; min-width:0; font-size:18px; font-weight:700; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); }
+  button { border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:14px/1.4 inherit; resize:vertical; }
+  input { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  h2 { font-size:15px; color:var(--muted); margin:20px 0 8px; }
+  .time { font-variant-numeric:tabular-nums; font-weight:600; }
+  .room { color:var(--accent); font-weight:600; }
+  .title { margin-top:2px; overflow-wrap:anywhere; }
+  .meta { color:var(--muted); font-size:14px; }
+  .card.past { opacity:.45; }
+  .card.live { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  #now { border-color:var(--accent); }
+  #now .label { font-size:13px; font-weight:600; color:var(--muted); margin-top:8px; }
+  #now .label:first-child { margin-top:0; }
+  #now .room { font-size:20px; }
+  .msg { color:var(--muted); }
+  .err { color:var(--err); }
+  .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .edit-only { display:none !important; }
+  body.editing .edit-only { display:revert !important; }
+  body.editing .toolbar.edit-only { display:flex !important; }
+  .card .edit-btn { float:right; margin:-4px -6px 0 8px; padding:2px 10px; font-size:14px; }
+  a.site { font-size:14px; color:var(--accent); }
+  dialog { width:min(520px, calc(100% - 32px)); border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--text); padding:16px; }
+  dialog::backdrop { background:rgb(0 0 0 / .5); }
+  dialog h3 { margin:0 0 12px; }
+  dialog label { display:block; font-size:14px; color:var(--muted); margin-bottom:10px; }
+  dialog label input { margin-top:2px; color:var(--text); }
+  .row { display:flex; gap:8px; }
+  .row label { flex:1; min-width:0; }
+  .actions { display:flex; gap:8px; align-items:center; }
+  .actions .spacer { flex:1; }
+  button.danger { color:var(--err); }
+  /* 挑選場次：直向時間軸。#pick-list 是唯一的捲動容器，欄頭與時間刻度用 sticky 固定 */
+  #pick-dlg { width:min(1100px, calc(100% - 16px)); height:90vh; padding:12px; }
+  #pick-dlg[open] { display:flex; flex-direction:column; }
+  .pick-head h3 { margin:0; }
+  .days { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+  .days button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  #pick-list { flex:1; min-height:0; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+  .tl-head { position:sticky; top:0; z-index:3; display:flex; background:var(--card); border-bottom:1px solid var(--line); }
+  .tl-head div { flex:none; font-size:12px; font-weight:600; text-align:center; padding:6px 2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .tl-head .corner { position:sticky; left:0; background:var(--card); }
+  .tl-body { position:relative; }
+  .tl-gutter { position:sticky; left:0; z-index:2; height:100%; background:var(--card); border-right:1px solid var(--line); }
+  .tl-gutter span { position:absolute; right:4px; font-size:11px; color:var(--muted); transform:translateY(-50%); font-variant-numeric:tabular-nums; }
+  .tl-gutter span:first-child { transform:none; }
+  .blk { position:absolute; text-align:left; overflow:hidden; padding:3px 5px; border-radius:6px; font-size:12px; line-height:1.3;
+         border:1px solid var(--line); background:color-mix(in srgb, var(--accent) 8%, var(--card)); color:var(--text); }
+  .blk b { display:block; font-variant-numeric:tabular-nums; }
+  .blk .who { color:var(--muted); }
+  .blk.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .blk.on .who { color:#fff; opacity:.85; }
+  .tag { display:inline-block; font-size:11px; padding:0 5px; border-radius:6px; background:var(--err); color:#fff; margin-left:4px; font-weight:400; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="conf-name">研討會議程</h1>
+    <select id="conf-select" aria-label="切換研討會" hidden></select>
+    <button id="edit-toggle" hidden>編輯</button>
+    <button id="logout" hidden>登出</button>
+  </header>
+
+  <div class="toolbar edit-only">
+    <button id="add-conf">＋ 研討會</button>
+    <button id="edit-conf">編輯研討會</button>
+    <button id="add-session">＋ 場次</button>
+    <button id="import-btn">匯入官方議程</button>
+    <button id="pick-btn" class="primary">挑選場次</button>
+  </div>
+
+  <section id="login" hidden>
+    <p>輸入 email，我們會寄一封登入連結給你。</p>
+    <form id="login-form">
+      <input id="email" type="email" required placeholder="you@example.com" autocomplete="email">
+      <p><button class="primary" type="submit">寄登入連結</button></p>
+    </form>
+    <p id="login-msg" class="msg"></p>
+  </section>
+
+  <p id="status" class="msg"></p>
+  <section id="now" class="card" hidden></section>
+  <div id="agenda"></div>
+</main>
+
+<dialog id="conf-dlg">
+  <form id="conf-form">
+    <h3 id="conf-dlg-title"></h3>
+    <label>名稱<input name="name" required></label>
+    <label>官網連結<input name="url" type="url" placeholder="https://"></label>
+    <p id="conf-err" class="err"></p>
+    <div class="actions">
+      <button type="button" id="conf-del" class="danger">刪除研討會</button>
+      <span class="spacer"></span>
+      <button type="button" onclick="this.closest('dialog').close()">取消</button>
+      <button type="submit" class="primary">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="import-dlg">
+  <form id="import-form">
+    <h3>匯入官方議程</h3>
+    <p class="meta">在電腦上打開官網議程頁（某一天的分頁），Ctrl+A 全選、Ctrl+C 複製，貼到下面。多天的話一天貼一次；同一天重貼會取代那天的資料。</p>
+    <textarea id="import-text" rows="8" placeholder="貼上官網議程頁的文字"></textarea>
+    <p id="import-preview" class="meta"></p>
+    <p id="import-err" class="err"></p>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button type="button" onclick="this.closest('dialog').close()">取消</button>
+      <button type="submit" class="primary" id="import-save" disabled>匯入</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="pick-dlg">
+  <div class="actions pick-head">
+    <h3>挑選場次</h3>
+    <span class="spacer"></span>
+    <button type="button" class="primary" onclick="this.closest('dialog').close()">完成</button>
+  </div>
+  <div id="pick-days" class="days"></div>
+  <p id="pick-err" class="err" style="margin:0"></p>
+  <div id="pick-list"></div>
+</dialog>
+
+<dialog id="session-dlg">
+  <form id="session-form">
+    <h3 id="session-dlg-title"></h3>
+    <div class="row">
+      <label>日期<input name="date" type="date" required></label>
+    </div>
+    <div class="row">
+      <label>開始<input name="start" type="time" required></label>
+      <label>結束<input name="end" type="time" required></label>
+    </div>
+    <label>會議室<input name="room" required></label>
+    <label>標題<input name="title" required></label>
+    <label>講者<input name="speaker"></label>
+    <label>類型<input name="kind" list="kinds"></label>
+    <datalist id="kinds"><option value="主題演講"><option value="分堂議程"><option value="工作坊"></datalist>
+    <p id="session-err" class="err"></p>
+    <div class="actions">
+      <button type="button" id="session-del" class="danger">刪除場次</button>
+      <span class="spacer"></span>
+      <button type="button" onclick="this.closest('dialog').close()">取消</button>
+      <button type="submit" class="primary">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="agenda.js"></script>
+<script>
+const SUPABASE_URL = 'https://ypnpprbkhalhblfonpai.supabase.co';
+// anon key 本來就是公開用的，資料靠 RLS 保護（見 setup.sql）
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwbnBwcmJraGFsaGJsZm9ucGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMTAyNzcsImV4cCI6MjA3OTg4NjI3N30.T58k86M0MYu6lMW6aM_aY6uTBkC3IPQ6EPFawnjFtl4';
+const CACHE_KEY = 'agenda-cache';
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+let conferences = [];
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+// ?now=2026-10-14T15:20 可模擬時間
+const NOW_PARAM = new URLSearchParams(location.search).get('now');
+const getNow = () => NOW_PARAM ? new Date(NOW_PARAM) : new Date();
+const localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const fmtDate = date => `${date.slice(5).replace('-', '/')}（${'日一二三四五六'[new Date(date + 'T00:00').getDay()]}）`;
+
+function renderNow(conf, now) {
+  const { current, next } = Agenda.nowNext(conf.sessions, now);
+  const today = localDate(now);
+  const parts = current.map(s => `
+    <div class="label">進行中・到 ${esc(s.end)}</div>
+    <div class="room">${esc(s.room)}</div>
+    <div class="title">${esc(s.title)}</div>`);
+
+  if (next) {
+    const mins = Math.round((Agenda.start(next) - now) / 60000);
+    const when = next.date === today ? `${next.start}${mins < 120 ? `（${mins} 分鐘後）` : ''}` : `${fmtDate(next.date)} ${next.start}`;
+    if (!current.length && next.date !== today && conf.sessions.some(s => s.date === today))
+      parts.push('<div class="label">今天的場次已結束</div>');
+    parts.push(`
+      <div class="label">下一場・${esc(when)}</div>
+      <div class="room">${esc(next.room)}</div>
+      <div class="title">${esc(next.title)}</div>`);
+  } else if (!current.length) {
+    parts.push(`<div class="label">${conf.sessions.some(s => s.date === today) ? '今天的場次已結束' : '全部場次已結束'}</div>`);
+  }
+  $('now').innerHTML = parts.join('');
+  $('now').hidden = !conf.sessions.length;
+}
+
+let selectedId = null; // 使用者在下拉選單選的；null 表示自動選日期最接近的
+let currentConf = null;
+
+function render() {
+  const now = getNow();
+  const conf = currentConf = conferences.find(c => c.id === selectedId) ?? (conferences.length ? Agenda.closest(conferences, now) : null);
+  $('edit-conf').hidden = $('add-session').hidden = $('import-btn').hidden = !conf;
+  $('pick-btn').hidden = !conf?.catalog?.length;
+  const multi = conferences.length > 1;
+  $('conf-name').hidden = multi;
+  $('conf-select').hidden = !multi;
+  $('conf-name').textContent = conf ? conf.name : '研討會議程';
+  $('conf-select').innerHTML = conferences.map(c =>
+    `<option value="${c.id}" ${c === conf ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+  if (!conf) { $('now').hidden = true; $('agenda').innerHTML = '<p class="msg">還沒有任何研討會。</p>'; return; }
+
+  renderNow(conf, now);
+
+  const byDate = {};
+  for (const s of Agenda.sortSessions(conf.sessions)) (byDate[s.date] ??= []).push(s);
+
+  $('agenda').innerHTML = (conf.url ? `<a class="site" href="${esc(conf.url)}" target="_blank" rel="noopener">官網議程 ↗</a>` : '')
+    + (conf.sessions.length ? '' : '<p class="msg">還沒有場次。按「編輯」→「＋ 場次」新增。</p>')
+    + Object.entries(byDate).map(([date, list]) => `
+    <h2>${esc(fmtDate(date))}</h2>
+    ${list.map(s => `
+      <div class="card ${Agenda.isPast(s, now) ? 'past' : Agenda.start(s) <= now ? 'live' : ''}">
+        <button class="edit-btn edit-only" data-idx="${conf.sessions.indexOf(s)}">編輯</button>
+        <div><span class="time">${esc(s.start)}–${esc(s.end)}</span>　<span class="room">${esc(s.room)}</span></div>
+        <div class="title">${esc(s.title)}</div>
+        <div class="meta">${[s.kind, s.speaker].filter(Boolean).map(esc).join('・')}</div>
+      </div>`).join('')}
+  `).join('');
+}
+
+setInterval(() => { if (conferences.length) render(); }, 60_000);
+$('conf-select').onchange = e => { selectedId = Number(e.target.value); render(); };
+
+async function load() {
+  $('status').textContent = '載入中…';
+  let res;
+  try { res = await db.from('conferences').select('*').order('id'); } catch (e) { res = { error: e }; }
+  if (res.error) {
+    if (!showOffline()) $('status').innerHTML = `<span class="err">讀取失敗：${esc(res.error.message)}</span>`;
+    return;
+  }
+  conferences = res.data;
+  saveCache();
+  $('status').textContent = '';
+  render();
+}
+
+function saveCache() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data: conferences })); } catch {}
+}
+
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { return null; }
+}
+
+// 連不上時改顯示上次成功讀到的資料；沒有快取就回傳 false
+function showOffline() {
+  const c = readCache();
+  if (!c?.data) return false;
+  conferences = c.data;
+  render();
+  const at = new Date(c.at);
+  $('status').textContent = `離線資料・上次更新 ${at.getMonth() + 1}/${at.getDate()} ${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`;
+  return true;
+}
+
+// ---- 編輯 ----
+$('edit-toggle').onclick = () => {
+  const on = document.body.classList.toggle('editing');
+  $('edit-toggle').textContent = on ? '完成' : '編輯';
+};
+
+// 送出寫入；成功才關對話框，失敗時對話框與填好的內容都留著
+async function persist(dlg, errEl, op) {
+  errEl.textContent = '儲存中…';
+  try {
+    const { data, error } = await op();
+    if (error) throw error;
+    errEl.textContent = '';
+    dlg.close();
+    return data;
+  } catch (e) {
+    errEl.textContent = `儲存失敗：${e.message}。內容還在，可以再按一次。`;
+  }
+}
+
+function putLocal(row) {
+  const i = conferences.findIndex(c => c.id === row.id);
+  if (i >= 0) conferences[i] = row; else conferences.push(row);
+  selectedId = row.id; // 剛改過的研討會繼續顯示
+  saveCache();
+  render();
+}
+
+let confEditing = null; // null = 新增
+function openConf(conf) {
+  confEditing = conf;
+  const f = $('conf-form');
+  f.reset();
+  f.elements.name.value = conf?.name ?? '';
+  f.elements.url.value = conf?.url ?? '';
+  $('conf-dlg-title').textContent = conf ? '編輯研討會' : '新增研討會';
+  $('conf-del').hidden = !conf;
+  $('conf-err').textContent = '';
+  $('conf-dlg').showModal();
+}
+$('add-conf').onclick = () => openConf(null);
+$('edit-conf').onclick = () => openConf(currentConf);
+
+$('conf-form').onsubmit = async e => {
+  e.preventDefault();
+  const fields = { name: e.target.elements.name.value.trim(), url: e.target.elements.url.value.trim() || null };
+  const row = await persist($('conf-dlg'), $('conf-err'), () => confEditing
+    ? db.from('conferences').update(fields).eq('id', confEditing.id).select().single()
+    : db.from('conferences').insert(fields).select().single());
+  if (row) { selectedId = row.id; putLocal(row); }
+};
+
+$('conf-del').onclick = async () => {
+  if (!confirm(`刪除「${confEditing.name}」和它的 ${confEditing.sessions.length} 個場次？刪了救不回來。`)) return;
+  const row = await persist($('conf-dlg'), $('conf-err'), () =>
+    db.from('conferences').delete().eq('id', confEditing.id).select().single());
+  if (row) {
+    conferences = conferences.filter(c => c.id !== row.id);
+    selectedId = null;
+    saveCache();
+    render();
+  }
+};
+
+let sessionIdx = null; // null = 新增；否則是 currentConf.sessions 的索引
+function openSession(idx) {
+  sessionIdx = idx;
+  const s = idx == null ? null : currentConf.sessions[idx];
+  const f = $('session-form');
+  f.reset();
+  const last = Agenda.sortSessions(currentConf.sessions).at(-1);
+  for (const k of ['date', 'start', 'end', 'room', 'title', 'speaker', 'kind'])
+    f.elements[k].value = s?.[k] ?? '';
+  if (!s) f.elements.date.value = last?.date ?? localDate(new Date());
+  $('session-dlg-title').textContent = s ? '編輯場次' : '新增場次';
+  $('session-del').hidden = !s;
+  $('session-err').textContent = '';
+  $('session-dlg').showModal();
+}
+$('add-session').onclick = () => openSession(null);
+$('agenda').onclick = e => {
+  const btn = e.target.closest('.edit-btn');
+  if (btn) openSession(Number(btn.dataset.idx));
+};
+
+function saveSessions(sessions) {
+  const conf = currentConf;
+  return persist($('session-dlg'), $('session-err'), () =>
+    db.from('conferences').update({ sessions }).eq('id', conf.id).select().single());
+}
+
+$('session-form').onsubmit = async e => {
+  e.preventDefault();
+  const s = Object.fromEntries(['date', 'start', 'end', 'room', 'title', 'speaker', 'kind']
+    .map(k => [k, e.target.elements[k].value.trim()]));
+  if (s.end <= s.start) { $('session-err').textContent = '結束時間要晚於開始時間。'; return; }
+  const sessions = [...currentConf.sessions];
+  if (sessionIdx == null) sessions.push(s); else sessions[sessionIdx] = s;
+  const row = await saveSessions(sessions);
+  if (row) putLocal(row);
+};
+
+$('session-del').onclick = async () => {
+  const s = currentConf.sessions[sessionIdx];
+  if (!confirm(`刪除場次「${s.title}」？`)) return;
+  const row = await saveSessions(currentConf.sessions.filter((_, i) => i !== sessionIdx));
+  if (row) putLocal(row);
+};
+
+// ---- 匯入官方議程 ----
+let importParsed = [];
+const confYear = conf => Number(([...conf.sessions, ...(conf.catalog ?? [])][0]?.date ?? '').slice(0, 4)) || new Date().getFullYear();
+
+$('import-btn').onclick = () => {
+  $('import-text').value = '';
+  $('import-preview').textContent = '';
+  $('import-err').textContent = '';
+  $('import-save').disabled = true;
+  $('import-dlg').showModal();
+};
+
+$('import-text').oninput = () => {
+  importParsed = Agenda.parseAgenda($('import-text').value, confYear(currentConf));
+  const perDay = {};
+  for (const s of importParsed) perDay[s.date] = (perDay[s.date] ?? 0) + 1;
+  $('import-preview').textContent = importParsed.length
+    ? `解析到 ${importParsed.length} 場：` + Object.entries(perDay).map(([d, n]) => `${fmtDate(d)} ${n} 場`).join('、')
+    : $('import-text').value.trim() ? '解析不到場次。這個網站的格式可能不支援，請改用「＋ 場次」手動新增。' : '';
+  $('import-save').disabled = !importParsed.length;
+};
+
+$('import-form').onsubmit = async e => {
+  e.preventDefault();
+  const days = new Set(importParsed.map(s => s.date));
+  const catalog = [...(currentConf.catalog ?? []).filter(s => !days.has(s.date)), ...importParsed];
+  const conf = currentConf;
+  const row = await persist($('import-dlg'), $('import-err'), () =>
+    db.from('conferences').update({ catalog }).eq('id', conf.id).select().single());
+  if (row) putLocal(row);
+};
+
+// ---- 挑選場次 ----
+const sessionKey = s => [s.date, s.start, s.room, s.title].join('|');
+const overlaps = (a, b) => a.date === b.date && a.start < b.end && b.start < a.end;
+
+const PX = 2, COL = 120, GUTTER = 44; // 每分鐘 2px、每間會議室 120px 寬、時間刻度欄 44px
+const toMin = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
+const fmtMin = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+let pickDay = null;
+
+function renderPicker() {
+  const catalog = currentConf.catalog ?? [];
+  const days = [...new Set(catalog.map(s => s.date))].sort();
+  if (!days.includes(pickDay)) pickDay = days.includes(localDate(getNow())) ? localDate(getNow()) : days[0];
+  $('pick-days').innerHTML = days.map(d =>
+    `<button type="button" data-day="${d}" class="${d === pickDay ? 'on' : ''}">${esc(fmtDate(d))}</button>`).join('');
+
+  const list = catalog.filter(s => s.date === pickDay);
+  const rooms = [...new Set(list.map(s => s.room))]; // 照官網出現順序
+  const t0 = Math.floor(Math.min(...list.map(s => toMin(s.start))) / 30) * 30;
+  const t1 = Math.ceil(Math.max(...list.map(s => toMin(s.end))) / 30) * 30;
+  const width = GUTTER + rooms.length * COL, height = (t1 - t0) * PX;
+  const picked = new Set(currentConf.sessions.map(sessionKey));
+
+  const ticks = [];
+  for (let m = t0; m <= t1; m += 30) ticks.push(`<span style="top:${(m - t0) * PX}px">${fmtMin(m)}</span>`);
+
+  const blocks = list.map(s => {
+    const on = picked.has(sessionKey(s));
+    // 撞場只標在已選場次之間；沒選的不管
+    const clash = on && currentConf.sessions.some(p => sessionKey(p) !== sessionKey(s) && overlaps(p, s));
+    const top = (toMin(s.start) - t0) * PX, h = (toMin(s.end) - toMin(s.start)) * PX;
+    const left = GUTTER + rooms.indexOf(s.room) * COL;
+    return `<button type="button" class="blk ${on ? 'on' : ''}" data-key="${esc(sessionKey(s))}"
+      style="top:${top + 1}px;left:${left + 2}px;width:${COL - 4}px;height:${h - 2}px"
+      aria-label="${on ? '移除' : '加入'}：${esc(s.title)}">
+      <b>${on ? '✓ ' : ''}${esc(s.start)}–${esc(s.end)}${clash ? '<span class="tag">撞場</span>' : ''}</b>
+      ${esc(s.title)}<div class="who">${esc(s.speaker)}</div></button>`;
+  }).join('');
+
+  const { scrollTop, scrollLeft } = $('pick-list');
+  $('pick-list').innerHTML = `
+    <div style="width:${width}px">
+      <div class="tl-head"><div class="corner" style="width:${GUTTER}px"></div>${rooms.map(r => `<div style="width:${COL}px">${esc(r)}</div>`).join('')}</div>
+      <div class="tl-body" style="height:${height}px;background:repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px ${30 * PX}px)">
+        <div class="tl-gutter" style="width:${GUTTER}px">${ticks.join('')}</div>
+        ${blocks}
+      </div>
+    </div>`;
+  Object.assign($('pick-list'), { scrollTop, scrollLeft });
+}
+
+$('pick-days').onclick = e => {
+  const d = e.target.closest('button[data-day]')?.dataset.day;
+  if (d) { pickDay = d; $('pick-list').scrollTop = 0; renderPicker(); }
+};
+
+$('pick-btn').onclick = () => { $('pick-err').textContent = ''; pickDay = null; renderPicker(); $('pick-dlg').showModal(); };
+
+// 點一下就存；存檔中鎖住所有按鈕，避免連點造成順序錯亂
+$('pick-list').onclick = async e => {
+  const btn = e.target.closest('button[data-key]');
+  if (!btn) return;
+  const key = btn.dataset.key;
+  const conf = currentConf;
+  const s = conf.catalog.find(c => sessionKey(c) === key);
+  const sessions = conf.sessions.some(p => sessionKey(p) === key)
+    ? conf.sessions.filter(p => sessionKey(p) !== key)
+    : [...conf.sessions, { ...s }];
+  $('pick-list').querySelectorAll('button').forEach(b => b.disabled = true);
+  $('pick-err').textContent = '';
+  try {
+    const { data, error } = await db.from('conferences').update({ sessions }).eq('id', conf.id).select().single();
+    if (error) throw error;
+    putLocal(data);
+  } catch (err) {
+    $('pick-err').textContent = `儲存失敗：${err.message}。請再點一次。`;
+  }
+  renderPicker();
+};
+
+function showSignedIn(signedIn) {
+  $('login').hidden = signedIn;
+  $('logout').hidden = !signedIn;
+  $('edit-toggle').hidden = !signedIn;
+  if (!signedIn) document.body.classList.remove('editing');
+  if (!signedIn) { conferences = []; $('now').hidden = true; $('agenda').innerHTML = ''; $('status').textContent = ''; }
+}
+
+$('login-form').onsubmit = async e => {
+  e.preventDefault();
+  $('login-msg').textContent = '寄送中…';
+  const { error } = await db.auth.signInWithOtp({
+    email: $('email').value,
+    options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true },
+  });
+  $('login-msg').innerHTML = error ? `<span class="err">寄送失敗：${esc(error.message)}</span>` : '已寄出，請到信箱點登入連結。';
+};
+
+$('logout').onclick = async () => {
+  await db.auth.signOut();
+  try { localStorage.removeItem(CACHE_KEY); } catch {}
+  showSignedIn(false);
+};
+
+db.auth.onAuthStateChange((event, session) => {
+  // 沒網路時登入狀態可能驗證不了，有快取就先照樣顯示
+  if (!session && !navigator.onLine && showOffline()) { $('login').hidden = true; return; }
+  if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+    showSignedIn(!!session);
+    if (session) load();
+  } else if (event === 'SIGNED_OUT') {
+    showSignedIn(false);
+  }
+});
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

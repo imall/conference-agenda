@@ -1,0 +1,91 @@
+{
+  "approval": {
+    "approval_model_version": 1,
+    "manifest_sha256": "33761f4530f07a2ba3d709d466eaf707cef90cdd43f29cf51aa6ac70fb2abfdc",
+    "state": "active"
+  },
+  "attestation": {
+    "attestation_version": 1,
+    "projection": {
+      "metadata": {
+        "approval": {
+          "approval_model_version": 1,
+          "manifest_sha256": "33761f4530f07a2ba3d709d466eaf707cef90cdd43f29cf51aa6ac70fb2abfdc",
+          "state": "active"
+        },
+        "last_operation": {
+          "kind": "complete-task",
+          "operation_id": "caaf1bc667d45f8168819a5b5913e6d3942e51982534e044cf97dac020854995"
+        },
+        "metadata_version": 1,
+        "revision": null
+      },
+      "status": "approved",
+      "tasks": [
+        {
+          "completed": true,
+          "ordinal": 1
+        },
+        {
+          "completed": true,
+          "ordinal": 2
+        },
+        {
+          "completed": true,
+          "ordinal": 3
+        },
+        {
+          "completed": true,
+          "ordinal": 4
+        },
+        {
+          "completed": true,
+          "ordinal": 5
+        },
+        {
+          "completed": true,
+          "ordinal": 6
+        },
+        {
+          "completed": false,
+          "ordinal": 7
+        },
+        {
+          "completed": true,
+          "ordinal": 8
+        },
+        {
+          "completed": true,
+          "ordinal": 9
+        },
+        {
+          "completed": true,
+          "ordinal": 10
+        },
+        {
+          "completed": true,
+          "ordinal": 11
+        },
+        {
+          "completed": true,
+          "ordinal": 12
+        },
+        {
+          "completed": true,
+          "ordinal": 13
+        }
+      ]
+    },
+    "projection_sha256": "fff36f4591c9ce47cfa60a4f8183d7d32b1b692860523cbe90ccb92a5596ac9a"
+  },
+  "last_operation": {
+    "kind": "complete-task",
+    "operation_id": "caaf1bc667d45f8168819a5b5913e6d3942e51982534e044cf97dac020854995"
+  },
+  "metadata_version": 1,
+  "revision": null,
+  "writer": {
+    "engine": "sdd-workflow",
+    "version": "1.1.3"
+  }
+}
