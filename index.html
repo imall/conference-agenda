@@ -38,7 +38,6 @@
   .msg { color:var(--muted); }
   .err { color:var(--err); }
   .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
-  .toolbar .spacer { flex:1; }
   .edit-only { display:none !important; }
   body.editing .edit-only { display:revert !important; }
   body.editing .toolbar.edit-only { display:flex !important; }
@@ -96,8 +95,6 @@
     <button id="add-session">＋ 場次</button>
     <button id="import-btn">匯入官方議程</button>
     <button id="pick-btn" class="primary">挑選場次</button>
-    <span class="spacer"></span>
-    <button id="logout" class="danger" hidden>登出</button>
   </div>
 
   <section id="login" hidden>
@@ -563,7 +560,6 @@ $('pick-list').onclick = async e => {
 
 function showSignedIn(signedIn) {
   $('login').hidden = signedIn;
-  $('logout').hidden = !signedIn;
   $('edit-toggle').hidden = !signedIn;
   if (!signedIn) document.body.classList.remove('editing');
   if (!signedIn) { conferences = []; $('now').hidden = true; $('agenda').innerHTML = ''; $('status').textContent = ''; }
@@ -577,13 +573,6 @@ $('login-form').onsubmit = async e => {
     options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true },
   });
   $('login-msg').innerHTML = error ? `<span class="err">寄送失敗：${esc(error.message)}</span>` : '已寄出，請到信箱點登入連結。';
-};
-
-$('logout').onclick = async () => {
-  if (!confirm('確定要登出？這台裝置上的離線議程也會一起清掉，之後要重新收信登入。')) return;
-  await db.auth.signOut();
-  try { localStorage.removeItem(CACHE_KEY); } catch {}
-  showSignedIn(false);
 };
 
 let authSeen = false;
