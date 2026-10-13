@@ -173,6 +173,15 @@
   </form>
 </dialog>
 
+<script>
+// 手機上看不到 console：任何錯誤（含外部 script 載入失敗）直接顯示在畫面上
+window.showFatal = m => {
+  document.getElementById('status').innerHTML =
+    `<span class="err">出錯了：${String(m).replace(/</g, '&lt;')}。請截圖回報，或重新整理再試一次。</span>`;
+};
+addEventListener('error', e => showFatal(e.message || `載入失敗 ${e.target?.src ?? ''}`), true);
+addEventListener('unhandledrejection', e => showFatal(e.reason?.message ?? e.reason));
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="agenda.js"></script>
 <script>
@@ -536,7 +545,11 @@ $('logout').onclick = async () => {
   showSignedIn(false);
 };
 
+let authSeen = false;
+setTimeout(() => { if (!authSeen) showFatal('8 秒內讀不到登入狀態（登入元件卡住）'); }, 8000);
+
 db.auth.onAuthStateChange((event, session) => {
+  authSeen = true;
   // 沒網路時登入狀態可能驗證不了，有快取就先照樣顯示
   if (!session && !navigator.onLine && showOffline()) { $('login').hidden = true; return; }
   if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {

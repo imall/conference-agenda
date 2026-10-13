@@ -14,8 +14,8 @@
           "state": "active"
         },
         "last_operation": {
-          "kind": "approve",
-          "operation_id": "93023d04a9233a1a82dd5916d0d6951250d44eaf66e37d7af24c53e0c26b39f5"
+          "kind": "complete-task",
+          "operation_id": "c0689d15ffe87c2a2b82ce00e0569e2be8f5d0a36b1366a92e6d23b51a857e76"
         },
         "metadata_version": 1,
         "revision": null
@@ -79,16 +79,16 @@
           "ordinal": 14
         },
         {
-          "completed": false,
+          "completed": true,
           "ordinal": 15
         }
       ]
     },
-    "projection_sha256": "312f166d0e4a23b8057143068b6bdd3fbe1866bb089aa135cc6c21e71f0a9b4d"
+    "projection_sha256": "ab42d98e65e8ecc19a4cdcbbfe3cd0f5c8b7f69e43a1f0a6b1954c72266c495c"
   },
   "last_operation": {
-    "kind": "approve",
-    "operation_id": "93023d04a9233a1a82dd5916d0d6951250d44eaf66e37d7af24c53e0c26b39f5"
+    "kind": "complete-task",
+    "operation_id": "c0689d15ffe87c2a2b82ce00e0569e2be8f5d0a36b1366a92e6d23b51a857e76"
   },
   "metadata_version": 1,
   "revision": null,
