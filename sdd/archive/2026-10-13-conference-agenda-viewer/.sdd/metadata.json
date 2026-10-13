@@ -1,0 +1,163 @@
+{
+  "approval": {
+    "approval_model_version": 1,
+    "manifest_sha256": "75ac4006a974fd21c892c6f19220f59747e6f7c323fdc54411f3995324ef2a71",
+    "state": "active"
+  },
+  "attestation": {
+    "attestation_version": 1,
+    "projection": {
+      "metadata": {
+        "approval": {
+          "approval_model_version": 1,
+          "manifest_sha256": "75ac4006a974fd21c892c6f19220f59747e6f7c323fdc54411f3995324ef2a71",
+          "state": "active"
+        },
+        "last_operation": {
+          "kind": "archive",
+          "operation_id": "b7fc4376d571191a9bae9475363694275bf886aff505a04a340f540d1f2d41ed"
+        },
+        "metadata_version": 1,
+        "revision": null,
+        "terminal": {
+          "archive_date": "2026-10-13",
+          "destination_directory": "2026-10-13-conference-agenda-viewer",
+          "operation": {
+            "kind": "archive",
+            "operation_id": "b7fc4376d571191a9bae9475363694275bf886aff505a04a340f540d1f2d41ed"
+          },
+          "short_name": "conference-agenda-viewer",
+          "source_snapshot": {
+            "proposal_sha256": "0d1914a1f5787e1f6d87f88b6f22c9986b2b92ae33bf1b53fb20399a34ea5a63",
+            "snapshot_digest": "a5492676087be9b55bb733bed06bc8e0f4671fd4de451697e76f4e87dd5138fb",
+            "snapshot_version": 1,
+            "tasks_sha256": "ff9be32e39c27a743d75bd06406bbaeb0036900d7e358a318ac8044ef780e072"
+          },
+          "source_status": "approved",
+          "summary": "研討會議程網頁：Supabase 登入與資料、離線快取、匯入官方議程與時間軸挑選、官網連結，部署於 GitHub Pages",
+          "terminal_metadata_version": 1,
+          "terminal_status": "completed",
+          "timestamp": "2026-10-13T15:19:57Z"
+        }
+      },
+      "status": "completed",
+      "tasks": [
+        {
+          "completed": true,
+          "ordinal": 1
+        },
+        {
+          "completed": true,
+          "ordinal": 2
+        },
+        {
+          "completed": true,
+          "ordinal": 3
+        },
+        {
+          "completed": true,
+          "ordinal": 4
+        },
+        {
+          "completed": true,
+          "ordinal": 5
+        },
+        {
+          "completed": true,
+          "ordinal": 6
+        },
+        {
+          "completed": true,
+          "ordinal": 7
+        },
+        {
+          "completed": true,
+          "ordinal": 8
+        },
+        {
+          "completed": true,
+          "ordinal": 9
+        },
+        {
+          "completed": true,
+          "ordinal": 10
+        },
+        {
+          "completed": true,
+          "ordinal": 11
+        },
+        {
+          "completed": true,
+          "ordinal": 12
+        },
+        {
+          "completed": true,
+          "ordinal": 13
+        },
+        {
+          "completed": true,
+          "ordinal": 14
+        },
+        {
+          "completed": true,
+          "ordinal": 15
+        },
+        {
+          "completed": true,
+          "ordinal": 16
+        },
+        {
+          "completed": true,
+          "ordinal": 17
+        },
+        {
+          "completed": true,
+          "ordinal": 18
+        },
+        {
+          "completed": true,
+          "ordinal": 19
+        },
+        {
+          "completed": true,
+          "ordinal": 20
+        },
+        {
+          "completed": true,
+          "ordinal": 21
+        }
+      ]
+    },
+    "projection_sha256": "6d1196d8aac89068fcf85f29b59aecf4338d651eb06db495dea7afb1666027a1"
+  },
+  "last_operation": {
+    "kind": "archive",
+    "operation_id": "b7fc4376d571191a9bae9475363694275bf886aff505a04a340f540d1f2d41ed"
+  },
+  "metadata_version": 1,
+  "revision": null,
+  "terminal": {
+    "archive_date": "2026-10-13",
+    "destination_directory": "2026-10-13-conference-agenda-viewer",
+    "operation": {
+      "kind": "archive",
+      "operation_id": "b7fc4376d571191a9bae9475363694275bf886aff505a04a340f540d1f2d41ed"
+    },
+    "short_name": "conference-agenda-viewer",
+    "source_snapshot": {
+      "proposal_sha256": "0d1914a1f5787e1f6d87f88b6f22c9986b2b92ae33bf1b53fb20399a34ea5a63",
+      "snapshot_digest": "a5492676087be9b55bb733bed06bc8e0f4671fd4de451697e76f4e87dd5138fb",
+      "snapshot_version": 1,
+      "tasks_sha256": "ff9be32e39c27a743d75bd06406bbaeb0036900d7e358a318ac8044ef780e072"
+    },
+    "source_status": "approved",
+    "summary": "研討會議程網頁：Supabase 登入與資料、離線快取、匯入官方議程與時間軸挑選、官網連結，部署於 GitHub Pages",
+    "terminal_metadata_version": 1,
+    "terminal_status": "completed",
+    "timestamp": "2026-10-13T15:19:57Z"
+  },
+  "writer": {
+    "engine": "sdd-workflow",
+    "version": "1.1.3"
+  }
+}

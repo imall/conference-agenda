@@ -4,7 +4,7 @@ schema_version: 2
 # conference-agenda-viewer
 
 ## 狀態
-approved
+completed
 
 ## 類型
 新功能
