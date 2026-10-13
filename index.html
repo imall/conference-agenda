@@ -77,6 +77,7 @@
   .blk-link { position:absolute; width:24px; height:24px; line-height:24px; text-align:center; border-radius:6px; font-size:14px; text-decoration:none; color:var(--accent); }
   .blk-link:hover { background:rgb(0 0 0 / .08); }
   .blk-link.on { color:#fff; }
+  .clash { font-size:13px; color:var(--err); margin-top:2px; }
   .tag { display:inline-block; font-size:11px; padding:0 5px; border-radius:6px; background:var(--err); color:#fff; margin-left:4px; font-weight:400; }
   [hidden] { display:none !important; }
 </style>
@@ -274,13 +275,14 @@ function render() {
     + tabs
     + Object.entries(byDate).filter(([date]) => date === agendaDay.date).map(([date, list]) => `
     ${tabs ? '' : `<h2>${esc(fmtDate(date))}</h2>`}
-    ${list.map(s => `
+    ${list.map(s => { const clash = list.filter(o => o !== s && overlaps(o, s)); return `
       <div class="card link ${Agenda.isPast(s, now) ? 'past' : Agenda.start(s) <= now ? 'live' : ''}" data-url="${esc(sessionUrl(conf, s))}">
         <button class="edit-btn edit-only" data-idx="${conf.sessions.indexOf(s)}">編輯</button>
-        <div><span class="time">${esc(s.start)}–${esc(s.end)}</span>　<span class="room">${esc(s.room)}</span></div>
+        <div><span class="time">${esc(s.start)}–${esc(s.end)}</span>${clash.length ? '<span class="tag">撞場</span>' : ''}　<span class="room">${esc(s.room)}</span></div>
         <div class="title">${esc(s.title)}</div>
         <div class="meta">${[s.kind, s.speaker].filter(Boolean).map(esc).join('・')}</div>
-      </div>`).join('')}
+        ${clash.length ? `<div class="clash">撞到：${clash.map(o => esc(`${o.start} ${o.room}`)).join('、')}</div>` : ''}
+      </div>`; }).join('')}
   `).join('');
 }
 
