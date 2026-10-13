@@ -14,8 +14,8 @@
           "state": "active"
         },
         "last_operation": {
-          "kind": "approve",
-          "operation_id": "607a39395435135abe9e05e705e0e70bc520d2fd343f50c8168e54ac702aaaf6"
+          "kind": "complete-task",
+          "operation_id": "8e2adc37870f021020e59af44b48d24772f4ea271c9b2ea81c9c28216639edb2"
         },
         "metadata_version": 1,
         "revision": null
@@ -91,16 +91,16 @@
           "ordinal": 17
         },
         {
-          "completed": false,
+          "completed": true,
           "ordinal": 18
         }
       ]
     },
-    "projection_sha256": "dadd2d764b46b7ea00a55b27190216ab79aa177651d5cea49829746fb1133f98"
+    "projection_sha256": "5c50baacfd3d8727e479d6efee5cec63ad5bda3b9196dfc5b6691e89509505e8"
   },
   "last_operation": {
-    "kind": "approve",
-    "operation_id": "607a39395435135abe9e05e705e0e70bc520d2fd343f50c8168e54ac702aaaf6"
+    "kind": "complete-task",
+    "operation_id": "8e2adc37870f021020e59af44b48d24772f4ea271c9b2ea81c9c28216639edb2"
   },
   "metadata_version": 1,
   "revision": null,
