@@ -1,7 +1,7 @@
 {
   "approval": {
     "approval_model_version": 1,
-    "manifest_sha256": "33761f4530f07a2ba3d709d466eaf707cef90cdd43f29cf51aa6ac70fb2abfdc",
+    "manifest_sha256": "2dff2a8d0838a2df31448376c5924da56b337be6823239cac3eaa8b3365b8b84",
     "state": "active"
   },
   "attestation": {
@@ -10,12 +10,12 @@
       "metadata": {
         "approval": {
           "approval_model_version": 1,
-          "manifest_sha256": "33761f4530f07a2ba3d709d466eaf707cef90cdd43f29cf51aa6ac70fb2abfdc",
+          "manifest_sha256": "2dff2a8d0838a2df31448376c5924da56b337be6823239cac3eaa8b3365b8b84",
           "state": "active"
         },
         "last_operation": {
-          "kind": "complete-task",
-          "operation_id": "caaf1bc667d45f8168819a5b5913e6d3942e51982534e044cf97dac020854995"
+          "kind": "approve",
+          "operation_id": "736cf26202668db7d03a9e65b08dc5b473f7884443bfd9683b944e2b7ab3c665"
         },
         "metadata_version": 1,
         "revision": null
@@ -73,14 +73,18 @@
         {
           "completed": true,
           "ordinal": 13
+        },
+        {
+          "completed": false,
+          "ordinal": 14
         }
       ]
     },
-    "projection_sha256": "fff36f4591c9ce47cfa60a4f8183d7d32b1b692860523cbe90ccb92a5596ac9a"
+    "projection_sha256": "797309371235738c42d0a6693692bc78fe8ec4852054fffb8a1be6f0bcd0b13a"
   },
   "last_operation": {
-    "kind": "complete-task",
-    "operation_id": "caaf1bc667d45f8168819a5b5913e6d3942e51982534e044cf97dac020854995"
+    "kind": "approve",
+    "operation_id": "736cf26202668db7d03a9e65b08dc5b473f7884443bfd9683b944e2b7ab3c665"
   },
   "metadata_version": 1,
   "revision": null,

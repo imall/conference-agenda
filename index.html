@@ -35,6 +35,7 @@
   .msg { color:var(--muted); }
   .err { color:var(--err); }
   .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .toolbar .spacer { flex:1; }
   .edit-only { display:none !important; }
   body.editing .edit-only { display:revert !important; }
   body.editing .toolbar.edit-only { display:flex !important; }
@@ -80,7 +81,6 @@
     <h1 id="conf-name">研討會議程</h1>
     <select id="conf-select" aria-label="切換研討會" hidden></select>
     <button id="edit-toggle" hidden>編輯</button>
-    <button id="logout" hidden>登出</button>
   </header>
 
   <div class="toolbar edit-only">
@@ -89,6 +89,8 @@
     <button id="add-session">＋ 場次</button>
     <button id="import-btn">匯入官方議程</button>
     <button id="pick-btn" class="primary">挑選場次</button>
+    <span class="spacer"></span>
+    <button id="logout" class="danger" hidden>登出</button>
   </div>
 
   <section id="login" hidden>
@@ -528,6 +530,7 @@ $('login-form').onsubmit = async e => {
 };
 
 $('logout').onclick = async () => {
+  if (!confirm('確定要登出？這台裝置上的離線議程也會一起清掉，之後要重新收信登入。')) return;
   await db.auth.signOut();
   try { localStorage.removeItem(CACHE_KEY); } catch {}
   showSignedIn(false);
