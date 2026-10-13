@@ -53,6 +53,26 @@ globalThis.Agenda = {
     return out;
   },
 
+  // 從整頁複製時剪貼簿裡的網頁格式（HTML）找出每場的介紹頁連結，回傳加上 url 的新陣列。
+  // iThome 每張卡片是 <a href="/2026/session/4971"></a> 後面接會議室、時間、標題，
+  // 所以把 HTML 依 <a 切段，同一段裡「標題相同且開始時間相同」就是那一場（同標題可能在不同時段重複開）。
+  attachLinks(sessions, html, baseUrl) {
+    const decode = s => s.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+    const chunks = html.split(/<a\s/i).slice(1).map(c => {
+      const href = c.match(/href\s*=\s*["']([^"']+)["']/i)?.[1];
+      const text = decode(c.replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ');
+      const start = text.match(/(\d{1,2}:\d{2})\s*[-–~～]/)?.[1]?.padStart(5, '0');
+      let url = null;
+      try { url = href && new URL(decode(href), baseUrl).href; } catch {}
+      return { url, text, start };
+    }).filter(c => c.url);
+    return sessions.map(s => {
+      const hit = chunks.find(c => c.start === s.start && c.text.includes(s.title));
+      return hit ? { ...s, url: hit.url } : s;
+    });
+  },
+
   // 場次日期離 now 最近的研討會；沒有場次的研討會排最後
   closest(conferences, now) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

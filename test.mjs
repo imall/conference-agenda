@@ -76,4 +76,27 @@ assert.equal(parsed[1].room, '603+604 會議室');
 assert.deepEqual([parsed[2].date, parsed[2].start, parsed[2].speaker], ['2026-10-15', '09:30', '講者甲']); // 頁尾不算講者
 assert.equal(Agenda.parseAgenda('隨便一段文字', 2026).length, 0);
 
+// 官網卡片 HTML → 每場連結。同標題在 10:10 與 15:30 各開一次，要靠開始時間分開
+const card = (href, room, time, kind, title, who) =>
+  `<div class="item-card"><a href="${href}"></a><div class="item-head">${room}</div><div class="item-content">` +
+  `<span>${time} ${kind}</span><h5>${title}</h5><div>${who}</div></div></div>`;
+const html = `<a href="/2026/speaker">講者</a>` +
+  card('/2026/lab/4990', '605+606 會議室', '10:10 - 12:10', '工作坊', 'AI 時代下,軟體團隊要怎麼設計?', '柯仁傑') +
+  card('/2026/session/4971', 'A 會議室', '11:15 - 12:00', '分堂議程', '當 AI 開始調查事故：讓 Kubernetes &amp; 告警', 'Duo') +
+  card('https://hwdc.ithome.com.tw/2026/lab/5010', '605+606 會議室', '15:30 - 17:30', '工作坊', 'AI 時代下,軟體團隊要怎麼設計?', '柯仁傑');
+const day2 = [
+  { date: '2026-10-15', start: '10:10', end: '12:10', room: '605+606 會議室', title: 'AI 時代下,軟體團隊要怎麼設計?' },
+  { date: '2026-10-15', start: '11:15', end: '12:00', room: 'A 會議室', title: '當 AI 開始調查事故：讓 Kubernetes & 告警' },
+  { date: '2026-10-15', start: '15:30', end: '17:30', room: '605+606 會議室', title: 'AI 時代下,軟體團隊要怎麼設計?' },
+  { date: '2026-10-15', start: '17:00', end: '17:30', room: 'F 會議室', title: '官網沒有這場' },
+];
+const linked = Agenda.attachLinks(day2, html, 'https://hwdc.ithome.com.tw/2026/agenda');
+assert.deepEqual(linked.map(s => s.url), [
+  'https://hwdc.ithome.com.tw/2026/lab/4990',     // 工作坊（相對路徑補成完整網址）
+  'https://hwdc.ithome.com.tw/2026/session/4971', // 分堂議程（標題含 &amp;）
+  'https://hwdc.ithome.com.tw/2026/lab/5010',     // 同標題、不同時段
+  undefined,                                     // 對不到就不加
+]);
+assert.equal(Agenda.attachLinks(day2, '', 'https://x').filter(s => s.url).length, 0); // 沒有網頁格式時照常
+
 console.log('ok');

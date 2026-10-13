@@ -26,6 +26,8 @@
   .room { color:var(--accent); font-weight:600; }
   .title { margin-top:2px; overflow-wrap:anywhere; }
   .meta { color:var(--muted); font-size:14px; }
+  .card.link[data-url]:not([data-url=""]) { cursor:pointer; }
+  .card.link[data-url]:not([data-url=""]) .title::after { content:" ↗"; color:var(--muted); }
   .card.past { opacity:.45; }
   .card.live { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
   #now { border-color:var(--accent); }
@@ -229,6 +231,12 @@ function renderNow(conf, now) {
 }
 
 let selectedId = null; // 使用者在下拉選單選的；null 表示自動選日期最接近的
+let agendaDay = { conf: null, date: null }; // 我的議程目前顯示哪一天
+
+// 場次介紹頁：自己有 url 用自己的；早先挑的沒有就去 catalog 找同一場；都沒有就開研討會官網議程
+const sessionUrl = (conf, s) => s.url
+  ?? (conf.catalog ?? []).find(c => sessionKey(c) === sessionKey(s))?.url
+  ?? conf.url ?? '';
 let currentConf = null;
 
 function render() {
@@ -248,13 +256,21 @@ function render() {
 
   const byDate = {};
   for (const s of Agenda.sortSessions(conf.sessions)) (byDate[s.date] ??= []).push(s);
+  const dates = Object.keys(byDate);
+  // 日期頁籤：手動選過就維持；換研討會或那天被刪光才回到預設（今天有場次選今天，否則第一天）
+  if (agendaDay.conf !== conf.id || !dates.includes(agendaDay.date))
+    agendaDay = { conf: conf.id, date: dates.includes(localDate(now)) ? localDate(now) : dates[0] };
+  const tabs = dates.length > 1
+    ? `<div class="days">${dates.map(d => `<button type="button" data-agenda-day="${d}" class="${d === agendaDay.date ? 'on' : ''}">${esc(fmtDate(d))}</button>`).join('')}</div>`
+    : '';
 
   $('agenda').innerHTML = (conf.url ? `<a class="site" href="${esc(conf.url)}" target="_blank" rel="noopener">官網議程 ↗</a>` : '')
     + (conf.sessions.length ? '' : '<p class="msg">還沒有場次。按「編輯」→「＋ 場次」新增。</p>')
-    + Object.entries(byDate).map(([date, list]) => `
-    <h2>${esc(fmtDate(date))}</h2>
+    + tabs
+    + Object.entries(byDate).filter(([date]) => date === agendaDay.date).map(([date, list]) => `
+    ${tabs ? '' : `<h2>${esc(fmtDate(date))}</h2>`}
     ${list.map(s => `
-      <div class="card ${Agenda.isPast(s, now) ? 'past' : Agenda.start(s) <= now ? 'live' : ''}">
+      <div class="card link ${Agenda.isPast(s, now) ? 'past' : Agenda.start(s) <= now ? 'live' : ''}" data-url="${esc(sessionUrl(conf, s))}">
         <button class="edit-btn edit-only" data-idx="${conf.sessions.indexOf(s)}">編輯</button>
         <div><span class="time">${esc(s.start)}–${esc(s.end)}</span>　<span class="room">${esc(s.room)}</span></div>
         <div class="title">${esc(s.title)}</div>
@@ -380,8 +396,12 @@ function openSession(idx) {
 }
 $('add-session').onclick = () => openSession(null);
 $('agenda').onclick = e => {
+  const day = e.target.closest('[data-agenda-day]');
+  if (day) { agendaDay.date = day.dataset.agendaDay; render(); return; }
   const btn = e.target.closest('.edit-btn');
-  if (btn) openSession(Number(btn.dataset.idx));
+  if (btn) { openSession(Number(btn.dataset.idx)); return; }
+  const url = e.target.closest('.card[data-url]')?.dataset.url;
+  if (url) window.open(url, '_blank', 'noopener');
 };
 
 function saveSessions(sessions) {
@@ -410,9 +430,11 @@ $('session-del').onclick = async () => {
 
 // ---- 匯入官方議程 ----
 let importParsed = [];
+let importHtml = ''; // 貼上時剪貼簿的網頁格式，用來找每場的官網連結
 const confYear = conf => Number(([...conf.sessions, ...(conf.catalog ?? [])][0]?.date ?? '').slice(0, 4)) || new Date().getFullYear();
 
 $('import-btn').onclick = () => {
+  importHtml = '';
   $('import-text').value = '';
   $('import-preview').textContent = '';
   $('import-err').textContent = '';
@@ -420,12 +442,18 @@ $('import-btn').onclick = () => {
   $('import-dlg').showModal();
 };
 
+// paste 比 input 先觸發；手打或貼純文字時 html 是空的，就不會有連結
+$('import-text').onpaste = e => { importHtml = e.clipboardData?.getData('text/html') ?? ''; };
+
 $('import-text').oninput = () => {
-  importParsed = Agenda.parseAgenda($('import-text').value, confYear(currentConf));
+  importParsed = Agenda.attachLinks(
+    Agenda.parseAgenda($('import-text').value, confYear(currentConf)), importHtml, currentConf.url ?? location.href);
   const perDay = {};
   for (const s of importParsed) perDay[s.date] = (perDay[s.date] ?? 0) + 1;
+  const linked = importParsed.filter(s => s.url).length;
   $('import-preview').textContent = importParsed.length
     ? `解析到 ${importParsed.length} 場：` + Object.entries(perDay).map(([d, n]) => `${fmtDate(d)} ${n} 場`).join('、')
+      + `（${linked} 場有官網介紹連結）`
     : $('import-text').value.trim() ? '解析不到場次。這個網站的格式可能不支援，請改用「＋ 場次」手動新增。' : '';
   $('import-save').disabled = !importParsed.length;
 };
