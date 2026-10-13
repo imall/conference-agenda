@@ -33,6 +33,8 @@
   #now { border-color:var(--accent); }
   #now .label { font-size:13px; font-weight:600; color:var(--muted); margin-top:8px; }
   #now .label:first-child { margin-top:0; }
+  #now .label { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  #now .kind { flex:none; font-weight:400; font-size:12px; padding:1px 8px; border-radius:999px; border:1px solid var(--accent); color:var(--accent); }
   #now .room { font-size:20px; }
   .msg { color:var(--muted); }
   .err { color:var(--err); }
@@ -212,8 +214,9 @@ const fmtDate = date => `${date.slice(5).replace('-', '/')}（${'日一二三四
 function renderNow(conf, now) {
   const { current, next } = Agenda.nowNext(conf.sessions, now);
   const today = localDate(now);
+  const kind = s => s.kind ? `<span class="kind">${esc(s.kind)}</span>` : '';
   const parts = current.map(s => `
-    <div class="label">進行中・到 ${esc(s.end)}</div>
+    <div class="label"><span>進行中・到 ${esc(s.end)}</span>${kind(s)}</div>
     <div class="room">${esc(s.room)}</div>
     <div class="title">${esc(s.title)}</div>`);
 
@@ -223,7 +226,7 @@ function renderNow(conf, now) {
     if (!current.length && next.date !== today && conf.sessions.some(s => s.date === today))
       parts.push('<div class="label">今天的場次已結束</div>');
     parts.push(`
-      <div class="label">下一場・${esc(when)}</div>
+      <div class="label"><span>下一場・${esc(when)}</span>${kind(next)}</div>
       <div class="room">${esc(next.room)}</div>
       <div class="title">${esc(next.title)}</div>`);
   } else if (!current.length) {
