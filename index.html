@@ -479,6 +479,7 @@ const sessionKey = s => [s.date, s.start, s.room, s.title].join('|');
 const overlaps = (a, b) => a.date === b.date && a.start < b.end && b.start < a.end;
 
 const PX = 5, COL = 160, GUTTER = 48; // 每分鐘 5px、每間會議室 160px 寬、時間刻度欄 48px
+const DAY_START = 9 * 60, DAY_END = 18 * 60;
 const toMin = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
 const fmtMin = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 let pickDay = null;
@@ -492,8 +493,9 @@ function renderPicker() {
 
   const list = catalog.filter(s => s.date === pickDay);
   const rooms = [...new Set(list.map(s => s.room))]; // 照官網出現順序
-  const t0 = Math.floor(Math.min(...list.map(s => toMin(s.start))) / 30) * 30;
-  const t1 = Math.ceil(Math.max(...list.map(s => toMin(s.end))) / 30) * 30;
+  // 固定畫 09:00–18:00 留白；有更早／更晚的場次才往外延伸
+  const t0 = Math.floor(Math.min(DAY_START, ...list.map(s => toMin(s.start))) / 30) * 30;
+  const t1 = Math.ceil(Math.max(DAY_END, ...list.map(s => toMin(s.end))) / 30) * 30;
   const width = GUTTER + rooms.length * COL, height = (t1 - t0) * PX;
   const picked = new Set(currentConf.sessions.map(sessionKey));
 
