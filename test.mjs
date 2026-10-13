@@ -99,4 +99,6 @@ assert.deepEqual(linked.map(s => s.url), [
 ]);
 assert.equal(Agenda.attachLinks(day2, '', 'https://x').filter(s => s.url).length, 0); // 沒有網頁格式時照常
 
+assert.equal(Agenda.attachLinks(day2.slice(1, 2), '<a href="javascript:alert(1)">11:15 - 12:00 當 AI 開始調查事故：讓 Kubernetes & 告警</a>', 'https://x')[0].url, undefined);
+
 console.log('ok');

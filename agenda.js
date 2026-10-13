@@ -66,7 +66,7 @@ globalThis.Agenda = {
       let url = null;
       try { url = href && new URL(decode(href), baseUrl).href; } catch {}
       return { url, text, start };
-    }).filter(c => c.url);
+    }).filter(c => /^https?:/.test(c.url)); // 只收網頁連結，擋掉 javascript: 之類
     return sessions.map(s => {
       const hit = chunks.find(c => c.start === s.start && c.text.includes(s.title));
       return hit ? { ...s, url: hit.url } : s;

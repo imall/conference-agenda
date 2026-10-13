@@ -73,6 +73,9 @@
   .blk .who { color:var(--muted); }
   .blk.on { background:var(--accent); border-color:var(--accent); color:#fff; }
   .blk.on .who { color:#fff; opacity:.85; }
+  .blk-link { position:absolute; width:24px; height:24px; line-height:24px; text-align:center; border-radius:6px; font-size:14px; text-decoration:none; color:var(--accent); }
+  .blk-link:hover { background:rgb(0 0 0 / .08); }
+  .blk-link.on { color:#fff; }
   .tag { display:inline-block; font-size:11px; padding:0 5px; border-radius:6px; background:var(--err); color:#fff; margin-left:4px; font-weight:400; }
   [hidden] { display:none !important; }
 </style>
@@ -504,7 +507,9 @@ function renderPicker() {
       style="top:${top + 1}px;left:${left + 2}px;width:${COL - 4}px;height:${h - 2}px"
       aria-label="${on ? '移除' : '加入'}：${esc(s.title)}">
       <b>${on ? '✓ ' : ''}${esc(s.start)}–${esc(s.end)}${clash ? '<span class="tag">撞場</span>' : ''}</b>
-      ${esc(s.title)}<div class="who">${esc(s.speaker)}</div></button>`;
+      ${esc(s.title)}<div class="who">${esc(s.speaker)}</div></button>${s.url ? `
+      <a class="blk-link ${on ? 'on' : ''}" href="${esc(s.url)}" target="_blank" rel="noopener" title="官網介紹"
+        aria-label="官網介紹：${esc(s.title)}" style="top:${top + h - 27}px;left:${left + COL - 28}px">↗</a>` : ''}`;
   }).join('');
 
   const { scrollTop, scrollLeft } = $('pick-list');
