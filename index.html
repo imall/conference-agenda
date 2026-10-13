@@ -194,7 +194,9 @@ const SUPABASE_URL = 'https://ypnpprbkhalhblfonpai.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwbnBwcmJraGFsaGJsZm9ucGFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMTAyNzcsImV4cCI6MjA3OTg4NjI3N30.T58k86M0MYu6lMW6aM_aY6uTBkC3IPQ6EPFawnjFtl4';
 const CACHE_KEY = 'agenda-cache';
 
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 不用瀏覽器的 navigator.locks：從 LINE 反覆開新分頁時，背景被凍結的舊分頁可能一直握著鎖，
+// supabase-js 讀登入狀態時會無限期等這把鎖，新分頁就卡住。只有自己一人用，不需要跨分頁鎖。
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { lock: (_name, _timeout, fn) => fn() } });
 const $ = id => document.getElementById(id);
 let conferences = [];
 
@@ -575,8 +577,15 @@ $('login-form').onsubmit = async e => {
   $('login-msg').innerHTML = error ? `<span class="err">寄送失敗：${esc(error.message)}</span>` : '已寄出，請到信箱點登入連結。';
 };
 
+// 有快取就先顯示，不等登入狀態；現場網路慢時也看得到議程
+{ const cached = readCache()?.data; if (cached?.length) { conferences = cached; render(); } }
+
 let authSeen = false;
-setTimeout(() => { if (!authSeen) showFatal('8 秒內讀不到登入狀態（登入元件卡住）'); }, 8000);
+setTimeout(() => {
+  if (authSeen) return;
+  if (conferences.length) showOffline();
+  else showFatal('8 秒內讀不到登入狀態（登入元件卡住）');
+}, 8000);
 
 db.auth.onAuthStateChange((event, session) => {
   authSeen = true;
