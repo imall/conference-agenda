@@ -286,7 +286,10 @@ setInterval(() => { if (conferences.length) render(); }, 60_000);
 $('conf-select').onchange = e => { selectedId = Number(e.target.value); render(); };
 
 async function load() {
-  $('status').textContent = '載入中…';
+  // 先顯示快取再抓最新；有東西可看就不提示「載入中」，免得畫面跳一下
+  const cached = readCache()?.data;
+  if (!conferences.length && cached?.length) { conferences = cached; render(); }
+  if (!conferences.length) $('status').textContent = '載入中…';
   let res;
   try { res = await db.from('conferences').select('*').order('id'); } catch (e) { res = { error: e }; }
   if (res.error) {
