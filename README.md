@@ -20,7 +20,7 @@
 1. **Supabase 專案**：在 [supabase.com](https://supabase.com/dashboard) 建專案，到 Project Settings → API Keys 複製 Project URL 與 anon key，填進 `index.html` 的 `SUPABASE_URL`、`SUPABASE_ANON_KEY`。anon key 本來就是公開用的，資料靠 RLS 保護。**service_role / secret key 絕對不要放進來。**
 2. **建表**：SQL Editor 貼上 `setup.sql` 執行。可以重跑；結果應顯示 `rls = true`。
 3. **Redirect URL**：Authentication → URL Configuration → Redirect URLs 加上
-   - `https://<帳號>.github.io/conference-agenda/**`（正式）
+   - `https://imall.dev/conference-agenda/**`（正式；帳號設了自訂網域，Pages 網址不是 `*.github.io`）
    - `http://localhost:5500/**`（本機開發）
 4. **登入一次**後，再跑一次 `setup.sql`，HWDC 2026 第一天 5 場的範例資料會掛到你的帳號（給最近一次登入的使用者）。
 5. **關閉公開註冊**：自己註冊好之後，到 Authentication → Sign In / Providers 關掉「Allow new users to sign up」，避免別人用你的專案註冊。（別人就算註冊也看不到你的資料，RLS 只給本人讀寫。）
