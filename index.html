@@ -99,11 +99,7 @@
   </div>
 
   <section id="login" hidden>
-    <p>輸入 email，我們會寄一封登入連結給你。</p>
-    <form id="login-form">
-      <input id="email" type="email" required placeholder="you@example.com" autocomplete="email">
-      <p><button class="primary" type="submit">寄登入連結</button></p>
-    </form>
+    <p><button id="google-login" class="primary">用 Google 帳號登入</button></p>
     <p id="login-msg" class="msg"></p>
   </section>
 
@@ -596,14 +592,13 @@ function showSignedIn(signedIn) {
   if (!signedIn) { conferences = []; $('now').hidden = true; $('agenda').innerHTML = ''; $('status').textContent = ''; }
 }
 
-$('login-form').onsubmit = async e => {
-  e.preventDefault();
-  $('login-msg').textContent = '寄送中…';
-  const { error } = await db.auth.signInWithOtp({
-    email: $('email').value,
-    options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true },
+$('google-login').onclick = async () => {
+  $('login-msg').textContent = '前往 Google…';
+  const { error } = await db.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: location.origin + location.pathname },
   });
-  $('login-msg').innerHTML = error ? `<span class="err">寄送失敗：${esc(error.message)}</span>` : '已寄出，請到信箱點登入連結。';
+  if (error) $('login-msg').innerHTML = `<span class="err">登入失敗：${esc(error.message)}</span>`;
 };
 
 // 有快取就先顯示，不等登入狀態；現場網路慢時也看得到議程

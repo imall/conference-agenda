@@ -6,7 +6,7 @@
 
 ## 怎麼用
 
-1. 打開網頁，用 email 登入（收信點連結；每台裝置第一次登入一次）。
+1. 打開網頁，用 Google 帳號登入。
 2. 右上「編輯」→「＋ 研討會」建立研討會（只有管理者看得到，見下方「誰能看到什麼」）。
 3. 「匯入官方議程」：在電腦上打開官網議程頁（某一天的分頁），Ctrl+A、Ctrl+C，貼進框裡 → 匯入。多天就一天貼一次，同一天重貼會覆蓋。
    - 解析規則照 iThome 研討會頁面格式（會議室 / `HH:MM - HH:MM 類型` / 標題 / 講者）。其他網站解析不到時，用「＋ 場次」手動新增。
@@ -23,7 +23,11 @@
    - `https://imall.dev/conference-agenda/**`（正式；帳號設了自訂網域，Pages 網址不是 `*.github.io`）
    - `http://localhost:5500/**`（本機開發）
 4. **登入一次**後，再跑一次 `setup.sql`：最近一次登入的使用者（你）會成為管理者，並建立 HWDC 2026 第一天 5 場的範例研討會。
-5. **開放註冊**：Authentication → Sign In / Providers 的「Allow new users to sign up」要打開，別人才能用 email 登入挑自己的場次。
+5. **開放註冊**：Authentication → Sign In / Providers 的「Allow new users to sign up」要打開，別人才能登入挑自己的場次。
+6. **Google 登入**：
+   1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → 建立憑證 → OAuth 用戶端 ID（類型「網頁應用程式」）。第一次要先設定 OAuth 同意畫面，發布狀態要改成「實際運作中」，不然只有測試使用者能登入。
+   2. 「已授權的重新導向 URI」填 `https://ypnpprbkhalhblfonpai.supabase.co/auth/v1/callback`。
+   3. 把 Client ID、Client Secret 填到 Supabase → Authentication → Sign In / Providers → Google，啟用。
 
 ## 誰能看到什麼
 
@@ -31,12 +35,11 @@
 - **挑選的場次**：每個人各自一份，存在 `picks`，只有本人看得到、改得到。
 - 刪除研討會會連同所有人在那個研討會的挑選一起刪掉。
 - 開放註冊後，任何知道網址的人都能註冊並看到研討會內容，但看不到別人挑了什麼，也改不了研討會。
-- Supabase 內建寄信服務每小時能寄的登入信很少；同一小時很多人第一次登入可能收不到信，要在 Authentication → Emails 設自己的 SMTP 才能解除。
 
-**加管理者**：對方先登入一次，再到 SQL Editor 執行（把 email 換掉）：
+**加管理者**：對方先用 Google 登入一次，再到 SQL Editor 執行（把 email 換掉）：
 
 ```sql
-INSERT INTO admins SELECT id FROM auth.users WHERE email = '對方的 email';
+INSERT INTO admins SELECT id FROM auth.users WHERE email = '對方的 Gmail';
 ```
 
 ## Supabase 閒置暫停
