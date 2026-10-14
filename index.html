@@ -199,7 +199,9 @@ const CACHE_KEY = 'agenda-cache';
 // supabase-js 讀登入狀態時會無限期等這把鎖，新分頁就卡住。只有自己一人用，不需要跨分頁鎖。
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { lock: (_name, _timeout, fn) => fn() } });
 const $ = id => document.getElementById(id);
-let conferences = [];
+let conferences = []; // 每個研討會的 sessions 是「自己挑的」，從 picks 合併進來
+let isAdmin = false;
+const withPicks = (conf, picks) => ({ ...conf, sessions: picks.find(p => p.conference_id === conf.id)?.sessions ?? [] });
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -248,7 +250,10 @@ let currentConf = null;
 function render() {
   const now = getNow();
   const conf = currentConf = conferences.find(c => c.id === selectedId) ?? (conferences.length ? Agenda.closest(conferences, now) : null);
-  $('edit-conf').hidden = $('add-session').hidden = $('import-btn').hidden = !conf;
+  $('add-session').hidden = !conf;
+  // 只是介面：真正擋寫入的是 setup.sql 的 RLS
+  $('edit-conf').hidden = $('import-btn').hidden = !conf || !isAdmin;
+  $('add-conf').hidden = !isAdmin;
   $('pick-btn').hidden = !conf?.catalog?.length;
   const multi = conferences.length > 1;
   $('conf-name').hidden = multi;
@@ -295,7 +300,19 @@ async function load() {
   if (!conferences.length && cached?.length) { conferences = cached; render(); }
   if (!conferences.length) $('status').textContent = '載入中…';
   let res;
-  try { res = await db.from('conferences').select('*').order('id'); } catch (e) { res = { error: e }; }
+  try {
+    // 研討會大家共用；自己挑的場次在 picks（RLS 只回自己的）；admins 讀得到自己那列就是管理者
+    const [confs, picks, admins] = await Promise.all([
+      db.from('conferences').select('*').order('id'),
+      db.from('picks').select('conference_id, sessions'),
+      db.from('admins').select('user_id'),
+    ]);
+    res = [confs, picks, admins].find(r => r.error) ?? confs;
+    if (!res.error) {
+      isAdmin = admins.data.length > 0;
+      res.data = res.data.map(c => withPicks(c, picks.data));
+    }
+  } catch (e) { res = { error: e }; }
   if (res.error) {
     if (!showOffline()) $('status').innerHTML = `<span class="err">讀取失敗：${esc(res.error.message)}</span>`;
     return;
@@ -307,7 +324,7 @@ async function load() {
 }
 
 function saveCache() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data: conferences })); } catch {}
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data: conferences, admin: isAdmin })); } catch {}
 }
 
 function readCache() {
@@ -319,6 +336,7 @@ function showOffline() {
   const c = readCache();
   if (!c?.data) return false;
   conferences = c.data;
+  isAdmin = !!c.admin;
   render();
   const at = new Date(c.at);
   $('status').textContent = `離線資料・上次更新 ${at.getMonth() + 1}/${at.getDate()} ${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`;
@@ -374,11 +392,12 @@ $('conf-form').onsubmit = async e => {
   const row = await persist($('conf-dlg'), $('conf-err'), () => confEditing
     ? db.from('conferences').update(fields).eq('id', confEditing.id).select().single()
     : db.from('conferences').insert(fields).select().single());
-  if (row) { selectedId = row.id; putLocal(row); }
+  // conferences 回來的列不含自己的挑選，沿用目前的
+  if (row) { selectedId = row.id; putLocal({ ...row, sessions: confEditing?.sessions ?? [] }); }
 };
 
 $('conf-del').onclick = async () => {
-  if (!confirm(`刪除「${confEditing.name}」和它的 ${confEditing.sessions.length} 個場次？刪了救不回來。`)) return;
+  if (!confirm(`刪除「${confEditing.name}」？所有人在這個研討會挑的場次也會一起刪除，刪了救不回來。`)) return;
   const row = await persist($('conf-dlg'), $('conf-err'), () =>
     db.from('conferences').delete().eq('id', confEditing.id).select().single());
   if (row) {
@@ -414,10 +433,14 @@ $('agenda').onclick = e => {
   if (url) window.open(url, '_blank', 'noopener');
 };
 
-function saveSessions(sessions) {
+// 自己挑的場次存在 picks：沒有就新增、有就覆蓋（owner 由資料庫預設為自己）
+const savePick = (conf, sessions) =>
+  db.from('picks').upsert({ conference_id: conf.id, sessions }).select().single();
+
+async function saveSessions(sessions) {
   const conf = currentConf;
-  return persist($('session-dlg'), $('session-err'), () =>
-    db.from('conferences').update({ sessions }).eq('id', conf.id).select().single());
+  const pick = await persist($('session-dlg'), $('session-err'), () => savePick(conf, sessions));
+  return pick && { ...conf, sessions: pick.sessions };
 }
 
 $('session-form').onsubmit = async e => {
@@ -475,7 +498,7 @@ $('import-form').onsubmit = async e => {
   const conf = currentConf;
   const row = await persist($('import-dlg'), $('import-err'), () =>
     db.from('conferences').update({ catalog }).eq('id', conf.id).select().single());
-  if (row) putLocal(row);
+  if (row) putLocal({ ...row, sessions: conf.sessions });
 };
 
 // ---- 挑選場次 ----
@@ -552,9 +575,9 @@ $('pick-list').onclick = async e => {
   $('pick-list').querySelectorAll('button').forEach(b => b.disabled = true);
   $('pick-err').textContent = '';
   try {
-    const { data, error } = await db.from('conferences').update({ sessions }).eq('id', conf.id).select().single();
+    const { data, error } = await savePick(conf, sessions);
     if (error) throw error;
-    putLocal(data);
+    putLocal({ ...conf, sessions: data.sessions });
   } catch (err) {
     $('pick-err').textContent = `儲存失敗：${err.message}。請再點一次。`;
   }
@@ -579,7 +602,7 @@ $('login-form').onsubmit = async e => {
 };
 
 // 有快取就先顯示，不等登入狀態；現場網路慢時也看得到議程
-{ const cached = readCache()?.data; if (cached?.length) { conferences = cached; render(); } }
+{ const c = readCache(); if (c?.data?.length) { conferences = c.data; isAdmin = !!c.admin; render(); } }
 
 let authSeen = false;
 setTimeout(() => {

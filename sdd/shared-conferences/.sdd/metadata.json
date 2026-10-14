@@ -1,0 +1,55 @@
+{
+  "approval": {
+    "approval_model_version": 1,
+    "manifest_sha256": "6d7c7424635d8ce461f4784a3ede454bb3292f132e2667bf560c7e3a5c5b5943",
+    "state": "active"
+  },
+  "attestation": {
+    "attestation_version": 1,
+    "projection": {
+      "metadata": {
+        "approval": {
+          "approval_model_version": 1,
+          "manifest_sha256": "6d7c7424635d8ce461f4784a3ede454bb3292f132e2667bf560c7e3a5c5b5943",
+          "state": "active"
+        },
+        "last_operation": {
+          "kind": "complete-task",
+          "operation_id": "de25d4d353855341ba93aafff2106a304b8cd2a22c9549eaee60febe20115fea"
+        },
+        "metadata_version": 1,
+        "revision": null
+      },
+      "status": "approved",
+      "tasks": [
+        {
+          "completed": true,
+          "ordinal": 1
+        },
+        {
+          "completed": true,
+          "ordinal": 2
+        },
+        {
+          "completed": true,
+          "ordinal": 3
+        },
+        {
+          "completed": false,
+          "ordinal": 4
+        }
+      ]
+    },
+    "projection_sha256": "f55a4e2298336b1ba2f202576b0ba163e7714b8a10b1ab950eed5c8c3748023d"
+  },
+  "last_operation": {
+    "kind": "complete-task",
+    "operation_id": "de25d4d353855341ba93aafff2106a304b8cd2a22c9549eaee60febe20115fea"
+  },
+  "metadata_version": 1,
+  "revision": null,
+  "writer": {
+    "engine": "sdd-workflow",
+    "version": "1.1.3"
+  }
+}
