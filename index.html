@@ -328,7 +328,12 @@ function saveCache() {
 }
 
 function readCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { return null; }
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+    // 舊版在 conferences.sessions 刪掉後存過沒有 sessions 的快取；補成空的，不然開頁就壞、也不會去抓最新資料
+    c?.data?.forEach(conf => conf.sessions ??= []);
+    return c;
+  } catch { return null; }
 }
 
 // 連不上時改顯示上次成功讀到的資料；沒有快取就回傳 false

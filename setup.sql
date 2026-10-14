@@ -71,7 +71,7 @@ BEGIN
     END IF;
 
     -- 舊版把自己挑的場次存在 conferences.sessions：複製到 picks，已有的不覆蓋。
-    -- 舊欄位等新版網頁上線後才刪，刪了之後這段自動跳過。
+    -- 舊欄位在下方刪掉，刪了之後這段自動跳過。
     IF EXISTS (SELECT 1 FROM information_schema.columns
                WHERE table_schema = 'public' AND table_name = 'conferences' AND column_name = 'sessions') THEN
         EXECUTE 'INSERT INTO picks (owner, conference_id, sessions)
@@ -103,6 +103,9 @@ BEGIN
         ]'::jsonb
     );
 END $$;
+
+-- 舊版的個人挑選欄位：上面已複製到 picks，刪掉才不會讓其他登入者讀到
+ALTER TABLE conferences DROP COLUMN IF EXISTS sessions;
 
 -- 驗證（SQL Editor 只顯示最後一段的結果，所以合成一張表）：
 -- rls 三個都要是 true；admins 是你的 email；old_sessions（舊欄位，刪掉後是空的）和 picks_sessions 場次數一樣
